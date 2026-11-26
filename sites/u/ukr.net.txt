@@ -1,0 +1,29 @@
+! Title: ukr.net
+! Target: site ukr.net
+! Updated: 2026-11-26
+
+[rules]
+! only the news portal www.ukr.net: mail and accounts (mail.ukr.net, accounts.ukr.net) are not touched
+! Google Ad Manager banner slots and their library
+||doubleclick.net^$domain=www.ukr.net
+||googletagservices.com^$domain=www.ukr.net
+||googlesyndication.com^$domain=www.ukr.net
+! consent wall of Google Funding Choices
+||fundingchoicesmessages.google.com^$domain=www.ukr.net
+! placeholder images of the banner slots
+||upst.fwdcdn.com/img/970x90.png$domain=www.ukr.net
+||upst.fwdcdn.com/img/300x250.png$domain=www.ukr.net
+! counters and analytics
+||counter.ukr.net^$domain=www.ukr.net
+||hit.gemius.pl^$domain=www.ukr.net
+||googletagmanager.com^$domain=www.ukr.net
+||google-analytics.com^$domain=www.ukr.net
+||analytics.google.com^$domain=www.ukr.net
+! banner containers
+www.ukr.net##.advertisement-block
+www.ukr.net##div[id^="div-gpt-ad-"]
+www.ukr.net##.placeholder
+www.ukr.net###banner1-sticky-wrap
+! paid text links (blocks served by the ad server, paid links in "Favourites")
+www.ukr.net##[x-adriver-id]
+www.ukr.net##.favorites-block a[bc]

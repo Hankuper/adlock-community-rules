@@ -1,0 +1,9 @@
+! Title: 24tv.ua
+! Target: site 24tv.ua
+! Updated: 2026-11-26
+
+[rules]
+! ad block inserted into the text of an article
+24tv.ua##div[app-article-ita]
+! ad cards among the news cards
+24tv.ua##div[app-ad-card]

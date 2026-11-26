@@ -1,0 +1,26 @@
+! Title: liga.net
+! Target: site liga.net
+! Updated: 2026-11-24
+
+[rules]
+! header bidding (prebid optimizer)
+||optimizer.apiswidget.com^$domain=liga.net
+! ad-recovery script and its ad endpoints
+||loadercdn.com^$domain=liga.net
+||loadercdn.net^$domain=liga.net
+||b-sing.com^$domain=liga.net
+! pageview tracker
+||crm-tracker-prod.liga.net^
+! sponsored cards (Partner project, Special project) and the slider of special projects
+liga.net##.news-card.is-partners
+liga.net##.js-partners-card
+liga.net##.section-default--slider:has(> .keen-slider > a.news-card.has-type-banner)
+! empty ad slots
+liga.net##.section-default__b-block
+! article pages: video ads (vidverto player with its own prebid)
+||vidverto.io^$domain=liga.net
+||adtrafficquality.google^$domain=liga.net
+liga.net##.aries_div
+! article pages: teaser block of clickbait ads (Recreativ) and the banner blocks around it
+||rcvlink.com^$domain=liga.net
+liga.net##.b-blocks

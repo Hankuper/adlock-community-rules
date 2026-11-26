@@ -1,0 +1,24 @@
+name: Check rule files
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Checker self-test
+        run: python tools/lint.py --selftest
+      - name: Tests of the tools
+        run: python tools/test_tools.py
+      - name: Check every rule file
+        run: python tools/lint.py

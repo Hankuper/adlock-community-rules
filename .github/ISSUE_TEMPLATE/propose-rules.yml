@@ -1,0 +1,63 @@
+name: Propose rules
+description: Share ad-blocking rules for one site. They are checked automatically and become a pull request.
+title: "Rules for <site>"
+labels: ["rules-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One issue - one site. Every rule must be tied to that site; see [FORMAT.md](../blob/main/FORMAT.md).
+        Do not paste full URLs with query strings, tokens or anything personal.
+  - type: input
+    id: site
+    attributes:
+      label: Site
+      description: The domain without www. and without a path.
+      placeholder: example.com
+    validations:
+      required: true
+  - type: textarea
+    id: rules
+    attributes:
+      label: Rules
+      description: Element hiding and request blocking, one rule per line. A line starting with `! ` is a comment for the rules below it - say what each rule hides.
+      render: text
+      placeholder: |
+        ! the empty banner slot in the sidebar
+        example.com##.ad-banner
+        ! the ad library, only on this site
+        ||ads.example.net^$domain=example.com
+    validations:
+      required: false
+  - type: textarea
+    id: deny
+    attributes:
+      label: Deny hosts
+      description: Hosts of this site to block everywhere (DNS / TLS), one per line. `*.ads.example.com` blocks only subdomains. The site itself (`example.com`) is merged only after a maintainer's review.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: allow
+    attributes:
+      label: Allow hosts
+      description: Hosts of this site that must not be filtered at all. Merged only after a maintainer's review - say why below.
+      render: text
+    validations:
+      required: false
+  - type: textarea
+    id: what
+    attributes:
+      label: What the rules do
+      description: What disappears, what gets fixed. For exceptions and allow entries - what was broken.
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I wrote these rules myself (not copied from other filter lists), tested them, and they contain no personal data.
+          required: true
+        - label: I release these rules under CC0 1.0 (public domain) - anyone may use and change them for any purpose.
+          required: true

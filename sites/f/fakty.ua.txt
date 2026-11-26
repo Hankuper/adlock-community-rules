@@ -1,0 +1,7 @@
+! Title: fakty.ua
+! Target: site fakty.ua
+! Updated: 2026-11-26
+
+[rules]
+! video ad slot "ВІДЕО ДНЯ" inside articles
+fakty.ua##.FKY_VIDEO

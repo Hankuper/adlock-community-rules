@@ -1,0 +1,14 @@
+! Title: tribuna.com
+! Target: site tribuna.com
+! Updated: 2026-11-26
+
+[rules]
+! banner slots of the site and the ad block of the news list on the home page
+tribuna.com##div[class^="Banner-module__"]
+tribuna.com##div[class*="__home_page__news_container__ads"]
+! teaser block of the Ideal Media network ("Реклама")
+tribuna.com##div[class^="_ideal-media_"]
+! empty ad placeholder after the text of a news item
+tribuna.com##div[class*="_structured-body_"] > div:has([id*="_Postscript"]):not(:has(p, img, a, h2, h3))
+! full-screen ad between the paragraphs (interscroller)
+tribuna.com##div[class^="Interscroller-module__"][class$="__wrapper"]

@@ -1,0 +1,117 @@
+name: Proposal to pull request
+
+# A "Propose rules" issue is checked and, when every line passes, becomes a pull request with one file.
+# The issue body is untrusted: it reaches the script only through an environment variable and is never
+# interpolated into a command.
+
+on:
+  issues:
+    types: [opened, edited, reopened, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: proposal-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  propose:
+    # A proposal is recognised by the label or by the form itself. GitHub sets the label of the form only when the
+    # issue is filed through the web form; an issue filed through the API (gh issue create, an assistant) by someone
+    # without write access loses its labels silently. The label protects nothing: the content is checked anyway.
+    # "labeled" runs the check when a maintainer labels an older issue by hand; other labels do not. The label of the
+    # web form comes as "labeled" from the author together with "opened" - that one is skipped, "opened" runs.
+    if: >-
+      (github.event.action != 'labeled' ||
+       (github.event.label.name == 'rules-proposal' && github.event.sender.login != github.event.issue.user.login)) &&
+      (contains(github.event.issue.labels.*.name, 'rules-proposal') ||
+       (contains(github.event.issue.body, '### Site') &&
+        (startsWith(github.event.issue.title, 'Rules for ') || contains(github.event.issue.body, '### Rules'))))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # so that the proposal shows up under its label; a change made with GITHUB_TOKEN starts no new run
+      - name: Label the proposal
+        if: ${{ !contains(github.event.issue.labels.*.name, 'rules-proposal') }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          gh label create rules-proposal --color 0E8A16 --description "Rules proposed through the issue form" --repo "$GITHUB_REPOSITORY" 2>/dev/null || true
+          gh issue edit "$ISSUE" --add-label rules-proposal --repo "$GITHUB_REPOSITORY"
+
+      - name: Check the proposal and update the file
+        id: propose
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          set +e
+          python tools/propose.py > report.md
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Open or update the pull request
+        id: pr
+        if: steps.propose.outputs.exit == '0'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          RULE_PATH: ${{ steps.propose.outputs.path }}
+          RULE_DOMAIN: ${{ steps.propose.outputs.domain }}
+          RULE_STATUS: ${{ steps.propose.outputs.status }}
+        run: |
+          branch="proposal/issue-${ISSUE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git add -- "$RULE_PATH"
+          git commit -m "Rules for ${RULE_DOMAIN} (proposal #${ISSUE})"
+          git push --force origin "$branch"
+          # "Closes" closes the issue when the pull request is merged (not when it is closed unmerged).
+          # what.md is the author's "What the rules do", already fenced by propose.py.
+          {
+            echo "Closes #${ISSUE}."
+            echo
+            if [ -s what.md ]; then
+              cat what.md
+              echo
+            fi
+            echo "### Check"
+            echo
+            cat report.md
+          } > pr.md
+          if ! gh pr view "$branch" --json number >/dev/null 2>&1; then
+            gh pr create --base main --head "$branch" --title "Rules for ${RULE_DOMAIN}" --body-file pr.md
+          else
+            gh pr edit "$branch" --body-file pr.md
+          fi
+          if [ "$RULE_STATUS" = "review" ]; then
+            gh label create needs-review --color D93F0B --description "Exceptions, allow entries or the whole site blocked: a maintainer must look" 2>/dev/null || true
+            gh pr edit "$branch" --add-label needs-review
+          fi
+          echo >> report.md
+          echo "A pull request with these rules is open: $(gh pr view "$branch" --json url --jq .url)" >> report.md
+
+      # The author must hear back even when the pull request step fails (for example, when Actions may not
+      # open pull requests): otherwise the issue stays silent. A cancelled run (a newer edit) stays silent.
+      - name: Note that the pull request was not opened
+        if: ${{ !cancelled() && steps.pr.outcome == 'failure' }}
+        run: |
+          echo >> report.md
+          echo "The rules passed the check, but the pull request could not be opened automatically. A maintainer will open it by hand." >> report.md
+
+      - name: Answer in the issue
+        if: ${{ !cancelled() && steps.propose.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: gh issue comment "$ISSUE" --body-file report.md
