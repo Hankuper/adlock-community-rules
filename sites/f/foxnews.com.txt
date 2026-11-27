@@ -1,0 +1,13 @@
+! Title: foxnews.com
+! Target: site foxnews.com
+! Updated: 2026-11-27
+
+[rules]
+! https://github.com/Hankuper/adlock-community-rules/issues/1
+! Hide the anti-adblock wall on foxnews.com: the full-screen overlay and the scroll lock it puts on the page.
+! anti-adblock wall: give back page scrolling locked by the wall
+foxnews.com#$#html { overflow: auto!important; }
+foxnews.com#$#body { overflow: auto!important; }
+! anti-adblock wall: hide the full-screen overlay (fixed div with inline z-index) attached to body
+foxnews.com##body>div[class*=" "][style*="initial"]
+foxnews.com##body>div[class][style*="z-index"][style*="fixed"]
